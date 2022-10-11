@@ -66,6 +66,7 @@ class action_plugin_oauthazure extends Adapter
         $scopes = [
             Azure::SCOPE_OPENID,
             Azure::SCOPE_EMAIL,
+            Azure::SCOPE_PROFILE,
             Azure::SCOPE_OFFLINE,
         ];
 
