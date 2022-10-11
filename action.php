@@ -1,17 +1,17 @@
 <?php
 
 use dokuwiki\plugin\oauth\Adapter;
-use dokuwiki\plugin\oauthkeycloak\Keycloak;
+use dokuwiki\plugin\oauthazure\Azure;
 
 /**
- * Service Implementation for Keycloak authentication
+ * Service Implementation for Azure authentication
  */
-class action_plugin_oauthkeycloak extends Adapter
+class action_plugin_oauthazure extends Adapter
 {
     /** @inheritdoc */
     public function registerServiceClass()
     {
-        return Keycloak::class;
+        return Azure::class;
     }
 
     /**
@@ -20,7 +20,7 @@ class action_plugin_oauthkeycloak extends Adapter
      */
     public function logout()
     {
-        /** @var Keycloak */
+        /** @var Azure */
         $oauth = $this->getOAuthService();
         $oauth->logout();
     }
@@ -28,22 +28,34 @@ class action_plugin_oauthkeycloak extends Adapter
     /** * @inheritDoc */
     public function getUser()
     {
-        /** @var Keycloak */
+        /** @var Azure */
         $oauth = $this->getOAuthService();
-        $data = array();
 
-        $url = $oauth->getEndpoint(Keycloak::ENDPOINT_USERINFO);
-        $raw = $oauth->request($url);
+        $tokenExtras = $oauth->getStorage()->retrieveAccessToken($oauth->service())->getExtraParams();
+        $idToken = $tokenExtras['id_token'] ?? '';
 
-        if (!$raw) throw new OAuthException('Failed to fetch data from userinfo endpoint');
-        $result = json_decode($raw, true);
-        if (!$result) throw new OAuthException('Failed to parse data from userinfo endpoint');
+        $decodedObj = json_decode(base64_decode(str_replace('_', '/',
+            str_replace('-', '+', explode('.', $idToken)[1]))));
+        $result = (array)$decodedObj;
+        if (!$result) throw new OAuthException('Failed to parse data from userinfo from JWT');
 
-        $data = array();
+        $data = [];
         $data['user'] = $result['preferred_username'];
         $data['name'] = $result['name'];
         $data['mail'] = $result['email'];
-        $data['grps'] = $result['groups'];
+        $data['grps'] = array_merge($result['groups'] ?? [], $result['roles'] ?? []);
+
+        if ($this->getConf('fetchgroups')) {
+            $usergroups = $oauth->request(Azure::GRAPH_MEMBEROF);
+            $usergroups = json_decode($usergroups, true);
+            if (!$usergroups) throw new OAuthException('Failed to parse group data');
+
+            if (isset($usergroups['value'])) {
+                $data['grps'] = array_map(function ($item) {
+                    return $item['displayName'] ?? $item['id'];
+                }, $usergroups['value']);
+            }
+        }
 
         return $data;
     }
@@ -51,18 +63,30 @@ class action_plugin_oauthkeycloak extends Adapter
     /** @inheritdoc */
     public function getScopes()
     {
-        return array(Keycloak::SCOPE_OPENID);
+        $scopes = [
+            Azure::SCOPE_OPENID,
+            Azure::SCOPE_EMAIL,
+            Azure::SCOPE_OFFLINE,
+        ];
+
+        // use additional scopes to read group membership
+        if ($this->getConf('fetchgroups')) {
+            $scopes[] = Azure::SCOPE_USERREAD;
+            $scopes[] = Azure::SCOPE_GROUPMEMBER;
+        }
+
+        return $scopes;
     }
 
     /** @inheritDoc */
     public function getLabel()
     {
-        return $this->getConf('label');
+        return 'Azure';
     }
 
     /** @inheritDoc */
     public function getColor()
     {
-        return $this->getConf('color');
+        return '#008AD7';
     }
 }

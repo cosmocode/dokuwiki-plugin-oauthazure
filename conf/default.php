@@ -1,13 +1,10 @@
 <?php
 
 /**
- * Default settings for the oauthkeycloak plugin
+ * Default settings for the oauthazure plugin
  */
 
 $conf['key'] = '';
 $conf['secret'] = '';
-
-$conf['openidurl'] = '';
-
-$conf['label'] = 'Keycloak';
-$conf['color'] = '#333333';
+$conf['tenant'] = '';
+$conf['fetchgroups'] = 0;

@@ -1,14 +1,10 @@
 <?php
 
 /**
- * english language file for oauthkeycloak plugin
- *
- * @author Naoto Kobayashi <naoto.kobayashi4c@gmail.com>
+ * english language file for oauthazure plugin
  */
 
 $lang['key'] = 'Client ID';
 $lang['secret'] = 'Cient Secret';
-$lang['openidurl'] = 'OpenID Connect Auto Discovery URL';
-
-$lang['label'] = 'Label to display on the login button';
-$lang['color'] = 'Color to use with the login button';
+$lang['openidurl'] = 'Your tenant name or ID';
+$lang['fetchgroups'] = 'By default only roles from the JWT are used as user groups. Enabling this option fetches group data.';
