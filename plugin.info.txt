@@ -1,7 +1,7 @@
 base   oauthazure
 author Andreas Gohr
 email  dokuwiki@cosmocode.de
-date   2022-10-11
+date   2023-04-20
 name   oAuth Azure Service
 desc   Azure Service for use with the oAuth Plugin
 url    http://www.dokuwiki.org/plugin:oauthazure
