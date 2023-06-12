@@ -45,6 +45,10 @@ class action_plugin_oauthazure extends Adapter
         $data['mail'] = $result['email'];
         $data['grps'] = array_merge($result['groups'] ?? [], $result['roles'] ?? []);
 
+        if ($this->getConf('stripdomain')) {
+            $data['user'] = explode('@', $data['user'], 2)[0];
+        }
+
         if ($this->getConf('fetchgroups')) {
             $usergroups = $oauth->request(Azure::GRAPH_MEMBEROF);
             $usergroups = json_decode($usergroups, true);
