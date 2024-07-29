@@ -61,7 +61,12 @@ class Azure extends AbstractOAuth2Base
     /** @inheritdoc */
     public function getAuthorizationEndpoint()
     {
-        return new Uri($this->getEndpoint(self::ENDPOINT_AUTH));
+        global $conf;
+        $uri = new Uri($this->getEndpoint(self::ENDPOINT_AUTH));
+        if (isset($conf['plugin']['oauth']['mailRestriction'])) {
+            $uri->addToQuery('domain_hint', substr($conf['plugin']['oauth']['mailRestriction'], 1));
+        }
+        return $uri;
     }
 
     /** @inheritdoc */
